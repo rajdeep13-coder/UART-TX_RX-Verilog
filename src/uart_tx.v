@@ -19,17 +19,27 @@ module uart_tx #(
     localparam [2:0] ST_PARITY = 3'd3;
     localparam [2:0] ST_STOP   = 3'd4;
 
-    reg [2:0] state;
-    reg [3:0] bit_index;
-    reg [4:0] sample_count;
-    reg [7:0] tx_shift;
-    reg       parity_bit;
+    // SAMPLE_W: enough bits to count 0..(OVERSAMPLE-1) for any OVERSAMPLE value.
+    // The +1 beyond $clog2 prevents rollover when OVERSAMPLE is an exact power of two
+    // (e.g. OVERSAMPLE=16 -> $clog2=4, so without +1 the counter maxes at 15 = 4'b1111
+    // and wraps before the == check can fire).
+    localparam integer SAMPLE_W = $clog2(OVERSAMPLE) + 1;
+
+    // BIT_W: enough bits to index 8 data bits (0..7); +1 is future-proof for
+    // wider data words without touching the state machine logic.
+    localparam integer BIT_W    = $clog2(8) + 1;
+
+    reg [2:0]          state;
+    reg [BIT_W-1:0]    bit_index;
+    reg [SAMPLE_W-1:0] sample_count;
+    reg [7:0]          tx_shift;
+    reg                parity_bit;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state        <= ST_IDLE;
-            bit_index    <= 4'd0;
-            sample_count <= 5'd0;
+            bit_index    <= 0;
+            sample_count <= 0;
             tx_shift     <= 8'h00;
             parity_bit   <= 1'b0;
             tx_serial    <= 1'b1;
@@ -42,8 +52,8 @@ module uart_tx #(
                 ST_IDLE: begin
                     tx_serial    <= 1'b1;
                     tx_busy      <= 1'b0;
-                    bit_index    <= 4'd0;
-                    sample_count <= 5'd0;
+                    bit_index    <= 0;
+                    sample_count <= 0;
 
                     if (tx_start) begin
                         tx_busy    <= 1'b1;
@@ -57,10 +67,10 @@ module uart_tx #(
                     tx_serial <= 1'b0;
                     if (tick_16x) begin
                         if (sample_count == (OVERSAMPLE - 1)) begin
-                            sample_count <= 5'd0;
+                            sample_count <= 0;
                             state        <= ST_DATA;
                         end else begin
-                            sample_count <= sample_count + 5'd1;
+                            sample_count <= sample_count + 1;
                         end
                     end
                 end
@@ -69,15 +79,15 @@ module uart_tx #(
                     tx_serial <= tx_shift[bit_index];
                     if (tick_16x) begin
                         if (sample_count == (OVERSAMPLE - 1)) begin
-                            sample_count <= 5'd0;
-                            if (bit_index == 4'd7) begin
-                                bit_index <= 4'd0;
+                            sample_count <= 0;
+                            if (bit_index == 7) begin
+                                bit_index <= 0;
                                 state     <= parity_en ? ST_PARITY : ST_STOP;
                             end else begin
-                                bit_index <= bit_index + 4'd1;
+                                bit_index <= bit_index + 1;
                             end
                         end else begin
-                            sample_count <= sample_count + 5'd1;
+                            sample_count <= sample_count + 1;
                         end
                     end
                 end
@@ -86,10 +96,10 @@ module uart_tx #(
                     tx_serial <= parity_bit;
                     if (tick_16x) begin
                         if (sample_count == (OVERSAMPLE - 1)) begin
-                            sample_count <= 5'd0;
+                            sample_count <= 0;
                             state        <= ST_STOP;
                         end else begin
-                            sample_count <= sample_count + 5'd1;
+                            sample_count <= sample_count + 1;
                         end
                     end
                 end
@@ -99,11 +109,11 @@ module uart_tx #(
                     if (tick_16x) begin
                         if (sample_count == (OVERSAMPLE - 1)) begin
                             state        <= ST_IDLE;
-                            sample_count <= 5'd0;
+                            sample_count <= 0;
                             tx_busy      <= 1'b0;
                             tx_done      <= 1'b1;
                         end else begin
-                            sample_count <= sample_count + 5'd1;
+                            sample_count <= sample_count + 1;
                         end
                     end
                 end
