@@ -42,7 +42,10 @@ fpga/vivado_project/**/*.bin
 fpga/vivado_project/**/*.dcp
 fpga/vivado_project/**/*.xml
 
-fpga/quartus_project/**/*.qdb/
+fpga/quartus_project/**/db/
+fpga/quartus_project/**/incremental_db/
+fpga/quartus_project/**/*.qdb
+fpga/quartus_project/**/*.qpf
 fpga/quartus_project/**/*.rpt
 fpga/quartus_project/**/*.sof
 fpga/quartus_project/**/*.pof
