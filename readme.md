@@ -6,6 +6,10 @@
 
 Compact, vendor-independent UART transmitter/receiver RTL with parity support, parameterized oversampling, loopback simulation, and FPGA project scaffolding for Vivado/Quartus flows.
 
+![ DE0-Nano (Cyclone IV E) wired to an external USB-to-TTL serial adapter for host-PC observation of tx_serial/rx_serial](docs/UART_TTL.jpeg)
+
+Technical Report: [Click Here](https://doi.org/10.13140/RG.2.2.24171.71201).
+
 ---
 
 ## Protocol Overview

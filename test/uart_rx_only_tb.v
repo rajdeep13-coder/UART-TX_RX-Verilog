@@ -19,12 +19,8 @@ module uart_rx_only_tb;
     wire parity_error;
     wire framing_error;
 
-    // -----------------------------------------------------------------
-    // FIX 4: tick_16x is a 1-clock-wide pulse fired every TICK_DIV
-    // cycles, matching the behaviour of uart_top's baud generator.
-    // The previous implementation toggled every clock (50% duty cycle),
-    // which drove the RX FSM at 2x the intended rate.
-    // -----------------------------------------------------------------
+    // tick_16x is a 1-clock-wide pulse fired every TICK_DIV cycles, matching the behaviour of uart_top's baud generator.
+
     reg [2:0] tick_count;
     reg       tick_16x;
 
@@ -42,7 +38,6 @@ module uart_rx_only_tb;
             end
         end
     end
-    // -----------------------------------------------------------------
 
     uart_rx #(
         .OVERSAMPLE(OVERSAMPLE)
@@ -103,11 +98,9 @@ module uart_rx_only_tb;
         end
     endtask
 
-    // -----------------------------------------------------------------
-    // FIX 3: rx_valid monitor with assertions instead of $display-only.
-    // Each frame sets expected_* before calling send_frame so the
-    // monitor can check the correct values on rx_valid.
-    // -----------------------------------------------------------------
+    // rx_valid monitor with assertions instead of $display-only.
+    // Each frame sets expected_* before calling send_frame so the monitor can check the correct values on rx_valid.
+
     reg       expect_parity_error;
     reg       expect_framing_error;
     reg [7:0] expect_data;
@@ -132,7 +125,6 @@ module uart_rx_only_tb;
             $display("[PASS] Frame verified correctly.");
         end
     end
-    // -----------------------------------------------------------------
 
     initial begin
         clk        = 1'b0;
